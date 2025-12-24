@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Details
+{% endblock %}
+
+{% block main %}
+    <div class="container text-start">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="{{ bounty.img_url }}" class="img-fluid rounded shadow" 
+                    onerror="this.onerror=null; this.src='/static/Bountygo.png';">
+            </div>
+            <div class="col-md-6">
+                <h1>{{ bounty.item_name }}</h1>
+                <p class="badge bg-info">{{ bounty.category }}</p>
+                <p><strong>Price:</strong> ${{ bounty.price }}</p>
+                <h3 class="text-danger">Reward: {{ bounty.reward_fee }} USD</h3>
+                <p><strong>Description:</strong> {{ bounty.description }}</p>
+                <p><strong>Dispatch to:</strong> {{ bounty.dispatch_box }}</p>
+                
+                {% if bounty.poster_id != session["user_id"] %}
+                    <form action="/claim" method="post">
+                        <input type="hidden" name="bounty_id" value="{{ bounty.id }}">
+                        <button type="submit" class="btn btn-success btn-lg w-100">Claim this Bounty</button>
+                    </form>
+                {% else %}
+                    <button class="btn btn-secondary btn-lg w-100" disabled>You cannot claim your own bounty</button>
+                {% endif %}
+        </div>
+    </div>
+{% endblock %}

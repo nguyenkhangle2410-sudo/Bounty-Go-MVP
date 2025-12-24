@@ -1,0 +1,24 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: all 0.4s ease;
+    margin: 0;
+}
+
+:root {
+    --bg-light: #ffffff;
+    --text-light: #0f172a;
+    --bg-dark: #121212;
+    --text-dark: #e0e0e0;
+    --nav-glass-light: rgba(255, 255, 255, 0.85);
+    --nav-glass-dark: rgba(31, 41, 55, 0.85);
+}
+
+.d-flex.flex-column.min-vh-100 {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.flex-fill {
+    flex: 1;
+}

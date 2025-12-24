@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Order
+{% endblock %}
+
+{% block main %}
+    <div class="container py-4">
+        <h3 class="mb-4">Creat new Bounty</h3>
+
+        <div class="mb-3">
+            <label class="form-label">Product URL</label>
+            <div class="input-group">
+                <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="url" placeholder="Product URL" type="text" id="url_input">
+                <button class="btn btn-outline-secondary" type="button" id="btn_fetch">Auto Fill</button>
+            </div>
+        </div>
+
+        <form action="/order" method="post">
+            <div class="mb-3">
+                <input name="item_name" id="item_name" class="form-control" placeholder="Item name" required 
+                    onerror="this.onerror=null; this.src='/static/Bountygo.png';">
+            </div>
+            <img id="item_image" src="" alt="item_image" class="img-fluid mb-3" style="max-height: 200px; display: none;">
+            <input type="hidden" name="img_url" id="img_url_hidden">
+            <div class="mb-3">
+                <select name="category" class="form-select">
+                    <option value="">Select a category</option>
+                    <option value="Anime">Anime</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Food">Food</option> 
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <input type="number" name="price" class="form-control" placeholder="Price (JPY/USD...)" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <input type="number" name="reward" class="form-control" placeholder="Reward (USD)" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <textarea name="description" id="item_description" class="form-control" placeholder="Detailed description (size, color, place of purchase, etc.)" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <input name="dispatch_box" class="form-control" placeholder="Dispatch box">
+            </div>
+            <button type="submit" class="btn btn-danger w-100">Create Bounty</button>
+        </form>
+    </div>
+{% endblock %}

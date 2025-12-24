@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Bounties
+{% endblock %}
+
+{% block main %}
+    <div class="container py-4">
+        <h2>Bounties</h2>
+
+        <form action="/bounties" method="POST">
+            <div class="col-md-4">
+                <input type="text" name="search_query" class="form-control" placeholder="Searching for item name...">
+            </div>
+            <div class="col-md-4">
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.category }}">{{ cat.category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="dispatch_box" class="form-control">
+                    <option value="">All Dispatch Boxes</option>
+                    {% for db in dispatch_boxes %}
+                        <option value="{{ db.dispatch_box }}">{{ db.dispatch_box }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+
+        <div class="row mt-4">
+            {% for bounty in bounties %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="{{ bounty.img_url }}" class="card-img-top" alt="{{ bounty.item_name }}" style="height: 200px; object-fit: cover;" 
+                            onerror="this.onerror=null; this.src='/static/Bountygo.png';">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ bounty.item_name }}</h5>
+                            <p class="card-text text-muted small">{{ bounty.description[:100] }}...</p>
+                            <ul class="list-unstyled">
+                                <li><strong>Category:</strong> {{ bounty.category }}</li>
+                                <li><strong>Price:</strong> {{ bounty.price }}</li>
+                                <li><strong>Reward:</strong> {{ bounty.reward_fee }}</li>
+                                <li><strong>Dispatch:</strong> {{ bounty.dispatch_box }}</li>
+                            </ul>
+                            <a href="/bounties/{{ bounty.id }}" class="btn btn-outline-danger w-100">Bounty Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center">
+                    <p class="lead">No bounty found.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
