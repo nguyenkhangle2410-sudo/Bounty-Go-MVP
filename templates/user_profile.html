@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    User Profile
+{% endblock %}
+
+{% block main %}
+<div class="container py-5 text-center">
+    <div class="avatar-circle mx-auto mb-3">{{ user.username[0] | upper }}</div>
+    <h2 class="fw-bold">@{{ user.username }}</h2>
+    <h3 class="fw-bold">{{ user.email }}</h3>
+    <p class="text-muted">Member of BountyGo</p>
+
+    <div class="row mt-4 justify-content-center">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 rounded-4">
+                <h4 class="fw-bold text-primary">{{ stats.completed_as_traveler }}</h4>
+                <p class="text-muted mb-0">Orders Delivered</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 rounded-4">
+                <h4 class="fw-bold text-success">{{ stats.completed_as_poster }}</h4>
+                <p class="text-muted mb-0">Bounties Posted</p>
+            </div>
+        </div>
+    </div>
+    <a href="javascript:history.back()" class="btn btn-light rounded-pill mt-4 px-4">Back</a>
+</div>
+{% endblock %}

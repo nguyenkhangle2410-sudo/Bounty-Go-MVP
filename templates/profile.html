@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block main %}
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <div class="avatar-circle mb-3 mx-auto">{{ user.username[0] | upper }}</div>
+            <h2 class="fw-bold">{{ user.username }}</h2>
+            <p class="text-muted">{{ user.email }}</p>
+        </div>
+
+        <ul class="nav nav-pills nav-fill mb-4 bg-light p-1 rounded-pill shadow-sm" id="profileTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill fw-bold" id="bounties-tab" data-bs-toggle="pill" data-bs-target="#bounties" type="button" role="tab">
+                    My Posted Bounties
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill fw-bold" id="orders-tab" data-bs-toggle="pill" data-bs-target="#orders" type="button" role="tab">
+                    My Claimed Orders
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="profileTabsContent">
+            <div class="tab-pane fade show active" id="bounties" role="tabpanel">
+                <div class="row g-3">
+                    {% if orders %}
+                        {% for item in orders %}
+                            {{ render_bounty_card(item, "owner") }}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-5">You haven't posted any orders yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="orders" role="tabpanel">
+                <div class="row g-3">
+                    {% if claims %}
+                        {% for item in claims %}
+                            {{ render_bounty_card(item, "traveler") }}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-5">You haven't claimed any bounties yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-muted">
+                        Are you sure you want to remove this bounty? This action cannot be undone.
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmDeleteBtn" class="btn btn-danger rounded-pill px-4">Delete Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="doneModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold">Confirm Complete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-muted">
+                        Are you sure you want to complete this bounty? This action cannot be undone.
+                    </div>
+                    <div class="modal-body text-muted">
+                        Please ensure you have received the item before marking it as completed.
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmdoneBtn" class="btn btn-danger rounded-pill px-4">Complete Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}    
+
+{% macro render_bounty_card(bounty, role) %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="position-relative">
+                <img src="{{ bounty.img_url or '/static/Bountygo.png' }}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                <span class="badge {{ 'bg-success' if bounty.status == 'pending' else 'bg-warning' if bounty.status == 'claimed' else 'bg-secondary' }} position-absolute top-0 start-0 m-2 shadow-sm">
+                    {{ bounty.status | upper }}
+                </span>
+            </div>
+
+            <div class="card-body">
+                <h6 class="fw-bold mb-1 text-truncate">{{ bounty.item_name }}</h6>
+                <p class="text-danger mb-3 small fw-bold">Reward: ${{ bounty.reward_fee }}</p>
+
+                <div class="mb-3 p-2 bg-light rounded-3 shadow-sm border-start border-primary border-4">
+                    {% if role == "owner" %}
+                        <small class="text-muted d-block">Traveler:</small>
+                        {% if bounty.status == 'pending' %}
+                            <span class="text-muted small">No one claimed yet</span>
+                        {% else %}
+                            <a href="/user/{{ bounty.traveler_id }}" class="fw-bold text-decoration-none text-primary">
+                                <i class="bi bi-person-badge"></i> @{{ bounty.traveler_name }}
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <small class="text-muted d-block">Poster:</small>
+                        <a href="/user/{{ bounty.poster_id }}" class="fw-bold text-decoration-none text-success">
+                            <i class="bi bi-person-circle"></i> @{{ bounty.poster_name }}
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="/bounties/{{ bounty.id }}" class="btn btn-sm btn-outline-dark flex-grow-1 rounded-pill">Details</a>
+
+                    {% if role == "owner" %}
+                        {% if bounty.status == 'pending' %}
+                            <a href="/edit_bounty/{{ bounty.id }}" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-pencil"></i></a>
+                            <form action="/delete_bounty" method="post" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="bounty_id" value="{{ bounty.id }}">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill btn-delete-trigger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        {% elif bounty.status == 'claimed' %}
+                            <form action="/completed_bounty" method="post" class="flex-grow-1">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="bounty_id" value="{{ bounty.id }}">
+                                <button type="button" class="btn btn-sm btn-success w-100 rounded-pill fw-bold btn-done-trigger" data-bs-toggle="modal" data-bs-target="#doneModal">
+                                    Mark as Completed
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+        

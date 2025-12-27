@@ -22,3 +22,51 @@ body {
 .flex-fill {
     flex: 1;
 }
+
+.display-5 {
+    letter-spacing: -1px;
+}
+
+.btn {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+}
+
+.card {
+    background-color: #ffffff;
+}
+
+.bounty-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.bounty-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.avatar-circle {
+    width: 80px; height: 80px; background-color: #dc3545; color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: bold;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #dc3545 !important;
+}
+
+.nav-link { color: #6c757d; }

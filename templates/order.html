@@ -5,48 +5,95 @@
 {% endblock %}
 
 {% block main %}
-    <div class="container py-4">
-        <h3 class="mb-4">Creat new Bounty</h3>
+    <div class="container py-">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow border-0 rounded-4 p-4 p-lg-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold">Create New Bounty</h2>
+                        <p class="text-muted">Fill in the details manually or use a product URL to auto-fill.</p>
+                    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Product URL</label>
-            <div class="input-group">
-                <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="url" placeholder="Product URL" type="text" id="url_input">
-                <button class="btn btn-outline-secondary" type="button" id="btn_fetch">Auto Fill</button>
+                    <div class="bg-light p-3 rounded-3 mb-4 border border-dashed">
+                        <label class="form-label fw-bold small text-uppercase text-secondary">Product URL</label>
+                        <div class="input-group">
+                            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="url" placeholder="Product URL" type="text" id="url_input">
+                            <button class="btn btn-dark px-4" type="button" id="btn_fetch">
+                                <span id="btn_text">Auto Fill</span>
+                                <span id="btn_spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            </button>
+                            <div class="form-text mt-1">We'll try to grab the title, image, and description for you.</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 opacity-25">
+
+                    <form action="/order" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="text-center mb-4">
+                            <img id="item_image" src="" alt="item_image" class="img-fluid mb-3" 
+                            style="max-height: 200px; display: none;" onerror="this.style.display='none';">
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input name="item_name" id="item_name" class="form-control" placeholder="Item name" required>
+                            <label for="item_name">What are you looking for?</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Image URL</label>
+                            <input type="text" name="img_url" id="img_url_input" class="form-control form-control-sm" 
+                            placeholder="Paste image link here if auto-fill fails">
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Category</label>
+                                <select name="category" class="form-select" required>
+                                    <option value="" disabled selected>Choose...</option>
+                                    <option value="Anime">Anime & Manga</option>
+                                    <option value="Fashion">Fashion & Apparel</option>
+                                    <option value="Food">Food & Snacks</option> 
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Dispatch To (Location)</label>
+                                <input name="dispatch_box" class="form-control" placeholder="City or Country" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Estimated Price ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">$</span>
+                                    <input type="number" min="0" step="0.01" name="price" class="form-control" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-danger">Your Reward ($)</label>
+                                <div class="input-group border border-danger rounded-2">
+                                    <span class="input-group-text bg-danger text-white border-danger">$</span>
+                                    <input type="number" min="0" step="0.01" name="reward" class="form-control border-danger" placeholder="0.00" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Details</label>
+                            <textarea name="description" id="item_description" class="form-control" 
+                                    placeholder="Detailed description (size, color, place of purchase, etc.)" rows=""></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold py-3 shadow-sm">
+                            Create Bounty
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
-
-        <form action="/order" method="post">
-            <div class="mb-3">
-                <input name="item_name" id="item_name" class="form-control" placeholder="Item name" required 
-                    onerror="this.onerror=null; this.src='/static/Bountygo.png';">
-            </div>
-            <img id="item_image" src="" alt="item_image" class="img-fluid mb-3" style="max-height: 200px; display: none;">
-            <input type="hidden" name="img_url" id="img_url_hidden">
-            <div class="mb-3">
-                <select name="category" class="form-select">
-                    <option value="">Select a category</option>
-                    <option value="Anime">Anime</option>
-                    <option value="Fashion">Fashion</option>
-                    <option value="Food">Food</option> 
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <input type="number" name="price" class="form-control" placeholder="Price (JPY/USD...)" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <input type="number" name="reward" class="form-control" placeholder="Reward (USD)" required>
-                </div>
-            </div>
-            <div class="mb-3">
-                <textarea name="description" id="item_description" class="form-control" placeholder="Detailed description (size, color, place of purchase, etc.)" rows="3"></textarea>
-            </div>
-            <div class="mb-3">
-                <input name="dispatch_box" class="form-control" placeholder="Dispatch box">
-            </div>
-            <button type="submit" class="btn btn-danger w-100">Create Bounty</button>
-        </form>
     </div>
 {% endblock %}

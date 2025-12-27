@@ -4,3 +4,7 @@ Flask-Session
 cs50 
 pytz 
 requests
+Flask-WTF
+pytest
+flake8
+cachelib

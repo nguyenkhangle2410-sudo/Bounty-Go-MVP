@@ -5,56 +5,93 @@
 {% endblock %}
 
 {% block main %}
-    <div class="container py-4">
-        <h2>Bounties</h2>
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold m-0">Available Bounties</h2>
+            <span class="badge bg-secondary">{{ bounties|length }} items found</span>
+        </div>
 
-        <form action="/bounties" method="POST">
-            <div class="col-md-4">
-                <input type="text" name="search_query" class="form-control" placeholder="Searching for item name...">
-            </div>
-            <div class="col-md-4">
-                <select name="category" class="form-control">
-                    <option value="">All Categories</option>
-                    {% for cat in categories %}
-                        <option value="{{ cat.category }}">{{ cat.category }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <select name="dispatch_box" class="form-control">
-                    <option value="">All Dispatch Boxes</option>
-                    {% for db in dispatch_boxes %}
-                        <option value="{{ db.dispatch_box }}">{{ db.dispatch_box }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
-        </form>
+        <div class="card border-0 shadow-sm p-3 mb-5 bg-light rounded-4">
+            <form action="/bounties" method="POST" class="row g-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="col-lg-4 col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search_query" class="form-control border-start-0" placeholder="Searching for item name...">
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <select name="category" class="form-control">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.category }}">{{ cat.category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <select name="dispatch_box" class="form-control">
+                        <option value="">All Dispatch Boxes</option>
+                        {% for db in dispatch_boxes %}
+                            <option value="{{ db.dispatch_box }}">{{ db.dispatch_box }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <button type="submit" class="btn btn-danger w-100 fw-bold">Search</button>
+                </div>
+            </form>
+        </div>
 
-        <div class="row mt-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
             {% for bounty in bounties %}
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <img src="{{ bounty.img_url }}" class="card-img-top" alt="{{ bounty.item_name }}" style="height: 200px; object-fit: cover;" 
-                            onerror="this.onerror=null; this.src='/static/Bountygo.png';">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ bounty.item_name }}</h5>
-                            <p class="card-text text-muted small">{{ bounty.description[:100] }}...</p>
-                            <ul class="list-unstyled">
-                                <li><strong>Category:</strong> {{ bounty.category }}</li>
-                                <li><strong>Price:</strong> {{ bounty.price }}</li>
-                                <li><strong>Reward:</strong> {{ bounty.reward_fee }}</li>
-                                <li><strong>Dispatch:</strong> {{ bounty.dispatch_box }}</li>
-                            </ul>
-                            <a href="/bounties/{{ bounty.id }}" class="btn btn-outline-danger w-100">Bounty Details</a>
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden bounty-card">
+                        <div class="position-relative">
+                            <img src="{{ bounty.img_url }}" 
+                                class="card-img-top" 
+                                alt="{{ bounty.item_name }}" 
+                                style="height: 200px; object-fit: cover;" 
+                                onerror="this.onerror=null; this.src='/static/Bountygo.png';">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-danger p-2 shadow-sm">+ ${{ bounty.reward_fee }}</span>
+                            </div>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <div class="mb-2">
+                                <span class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">{{ bounty.category }}</span>
+                                <h5 class="card-title mb-1 text-truncate">{{ bounty.item_name }}</h5>
+                            </div>
+                            
+                            <p class="card-text text-muted small flex-grow-1">
+                                {{ bounty.description[:80] }}{% if bounty.description|length > 80 %}...{% endif %}
+                            </p>
+
+                            <hr class="my-2 opacity-25">
+
+                            <div class="row g-0 align-items-center mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Price</small>
+                                    <span class="fw-bold">${{ bounty.price }}</span>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small class="text-muted d-block"><i class="bi bi-geo-alt"></i> To</small>
+                                    <span class="fw-bold text-truncate d-block">{{ bounty.dispatch_box }}</span>
+                                </div>
+                            </div>
+
+                            <a href="/bounties/{{ bounty.id }}" class="btn btn-outline-danger w-100 rounded-3 fw-bold">
+                                View Details
+                            </a>
                         </div>
                     </div>
                 </div>
             {% else %}
-                <div class="col-12 text-center">
-                    <p class="lead">No bounty found.</p>
+                <div class="col-12 py-5 text-center">
+                    <div class="mb-3"><i class="bi bi-search fs-1 text-muted"></i></div>
+                    <h4 class="text-muted">No bounties found.</h4>
+                    <p>Try changing your search keywords or filters.</p>
+                    <a href="/bounties" class="btn btn-secondary btn-sm">Clear all filters</a>
                 </div>
             {% endfor %}
         </div>
