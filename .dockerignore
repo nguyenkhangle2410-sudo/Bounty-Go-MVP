@@ -1,0 +1,12 @@
+venv
+__pycache__
+.git
+*.pyc
+static/images
+bounty.db
+flask_session/
+flask_session_cache/
+.github/
+.vscode/
+tests/
+scripts/
