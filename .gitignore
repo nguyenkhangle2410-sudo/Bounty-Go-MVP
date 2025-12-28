@@ -21,6 +21,3 @@ static/images/
 
 # Test outputs
 .pytest_cache/
-
-# GitHub workflow files (keep if you manage workflows locally)
-# .github/workflows/
