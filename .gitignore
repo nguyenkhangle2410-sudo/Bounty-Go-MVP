@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtualenv
+venv/
+
+# Editor
+.vscode/
+
+# Database
+bounty.db
+
+# Flask session files and caches
+flask_session/
+flask_session_cache/
+
+# User uploaded images (store externally or serve from CDN)
+static/images/
+
+# Test outputs
+.pytest_cache/
+
+# GitHub workflow files (keep if you manage workflows locally)
+# .github/workflows/

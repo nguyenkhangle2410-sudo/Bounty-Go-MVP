@@ -12,6 +12,8 @@ except Exception:
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from helpers import apology, login_required, get_product_info
 
@@ -50,6 +52,13 @@ else:
 
 db = SQL("sqlite:///bounty.db")
 
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+
 
 @app.after_request
 def after_request(response):
@@ -68,6 +77,7 @@ def index():
 
 
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def login():
 
     session.clear()
@@ -101,6 +111,7 @@ def logout():
 
 
 @app.route("/register", methods=["GET", "POST"])
+@limiter.limit("5 per hour")
 def register():
     
     session.clear() # Clear any existing session data
@@ -141,6 +152,7 @@ def register():
 
 
 @app.route("/order", methods=["GET", "POST"])
+@limiter.limit("10 per hour")
 @login_required
 def order():
     if request.method == "POST":
@@ -175,6 +187,7 @@ def order():
     
 
 @app.route("/fetch_url")
+@limiter.limit("30 per hour")
 def fetch_url():
     url = request.args.get("url")
     data = get_product_info(url)
@@ -244,6 +257,7 @@ def bounty(bounty_id):
 
 
 @app.route("/claim", methods=["POST"])
+@limiter.limit("5 per hour")
 @login_required
 def claim():
     bounty_id = request.form.get("bounty_id")
@@ -291,6 +305,7 @@ def profile():
 
 
 @app.route("/delete_bounty", methods=["POST"])
+@limiter.limit("10 per hour")
 @login_required
 def delete_bounty():
     bounty_id = request.form.get("bounty_id")
@@ -357,6 +372,7 @@ def update_bounty(bounty_id):
 
 
 @app.route("/completed_bounty", methods=["POST"])
+@limiter.limit("20 per hour")
 @login_required
 def completed_bounty():
     bounty_id = request.form.get("bounty_id")
