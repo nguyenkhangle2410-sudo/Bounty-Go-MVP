@@ -6,7 +6,6 @@ requests
 beautifulsoup4
 cs50
 python-dotenv
-decimal
 flask-sqlalchemy
 pytz
 pytest
