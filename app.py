@@ -25,7 +25,7 @@ load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 
-db_url = os.getenv("DB_URL", "sqlite:///bounty.db")
+db_url = os.getenv("DATABASE_URL", "sqlite:///bounty.db")
 
 # Ensure a secret key is set for securely signing the session cookie
 secret = os.environ.get("SECRET_KEY")
