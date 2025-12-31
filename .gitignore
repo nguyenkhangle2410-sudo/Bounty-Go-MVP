@@ -21,3 +21,6 @@ static/images/
 
 # Test outputs
 .pytest_cache/
+
+# Enviroment
+.env
