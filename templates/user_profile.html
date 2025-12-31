@@ -5,26 +5,69 @@
 {% endblock %}
 
 {% block main %}
-<div class="container py-5 text-center">
-    <div class="avatar-circle mx-auto mb-3">{{ user.username[0] | upper }}</div>
-    <h2 class="fw-bold">@{{ user.username }}</h2>
-    <h3 class="fw-bold">{{ user.email }}</h3>
-    <p class="text-muted">Member of BountyGo</p>
+    <div class="container py-5 text-center">
+        <div class="avatar-circle mx-auto mb-3 bg-primary text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 80px; height: 80px; border-radius: 50%; font-size: 2rem;">
+            {{ user.username[0] | upper }}
+        </div>
+        <h2 class="fw-bold mb-1">@{{ user.username }}</h2>
+        <p class="text-muted mb-4"><i class="bi bi-envelope me-1"></i>{{ user.email }}</p>
 
-    <div class="row mt-4 justify-content-center">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 rounded-4">
-                <h4 class="fw-bold text-primary">{{ stats.completed_as_traveler }}</h4>
-                <p class="text-muted mb-0">Orders Delivered</p>
+        <div class="row mt-4 justify-content-center g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                    <div class="mb-3"><i class="bi bi-truck fs-3 text-primary"></i></div>
+                    <h6 class="text-uppercase text-muted fw-bold small">Traveler Stats</h6>
+                    
+                    <div class="my-3">
+                        <h2 class="fw-bold mb-0">{{ user.completed_orders or 0 }}</h2>
+                        <p class="text-muted small">Orders Delivered</p>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="reputation-box">
+                        <h3 class="fw-bold mb-0 {% if traveler_rate >= 80 %}text-success{% elif traveler_rate >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ traveler_rate }}%
+                        </h3>
+                        <p class="text-muted small mb-2">Completion Rate</p>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar {% if traveler_rate >= 80 %}bg-success{% elif traveler_rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                style="width: {{ traveler_rate | int }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                    <div class="mb-3"><i class="bi bi-bag-heart fs-3 text-success"></i></div>
+                    <h6 class="text-uppercase text-muted fw-bold small">Shopper Stats</h6>
+                    
+                    <div class="my-3">
+                        <h2 class="fw-bold mb-0">{{ user.total_posted or 0 }}</h2>
+                        <p class="text-muted small">Bounties Posted</p>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="reputation-box">
+                        <h3 class="fw-bold mb-0 {% if shopper_rate >= 80 %}text-success{% elif shopper_rate >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ shopper_rate }}%
+                        </h3>
+                        <p class="text-muted small mb-2">Payment Reliability</p>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar {% if shopper_rate >= 80 %}bg-success{% elif shopper_rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                style="width: {{ shopper_rate | int }}%"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 rounded-4">
-                <h4 class="fw-bold text-success">{{ stats.completed_as_poster }}</h4>
-                <p class="text-muted mb-0">Bounties Posted</p>
-            </div>
+
+        <div class="mt-5">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Back
+            </a>
         </div>
     </div>
-    <a href="javascript:history.back()" class="btn btn-light rounded-pill mt-4 px-4">Back</a>
-</div>
 {% endblock %}

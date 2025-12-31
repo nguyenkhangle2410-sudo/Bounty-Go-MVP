@@ -115,7 +115,11 @@ function initDeleteConfirmation() {
     const confirmBtn = document.getElementById('confirmDeleteBtn');
     if (confirmBtn) {
         confirmBtn.addEventListener('click', () => {
-            if (formToDelete) formToDelete.submit();
+            if (formToDelete) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+                formToDelete.submit();
+            }
         });
     } 
 }
@@ -132,7 +136,11 @@ function initDoneConfirmation() {
     const confirmBtn = document.getElementById('confirmdoneBtn');
     if (confirmBtn) {
         confirmBtn.addEventListener('click', () => {
-            if (formToDone) formToDone.submit();
+            if (formToDone) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+                formToDone.submit();
+            }
         });
     } 
 }

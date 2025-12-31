@@ -1,11 +1,17 @@
 import requests
 import urllib.parse
+import logging
+import socket
+import ipaddress
 
 from bs4 import BeautifulSoup
 from flask import redirect, render_template, session
 from functools import wraps
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 import os
 import uuid
+
+from security import SafeHTTPAdapter
 
 def login_required(f):
     @wraps(f)
@@ -38,11 +44,18 @@ def apology(message, code=400):
 
 
 def get_product_info(url):
+
+    session = requests.session()
+
+    adapter = SafeHTTPAdapter()
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
     
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-        response = requests.get(url, headers=headers, timeout=10)
+        response = session.get(url, timeout=5, allow_redirects=True)
         response.raise_for_status()
+
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Try Open Graph tags first
@@ -55,49 +68,99 @@ def get_product_info(url):
         image_content = image.get("content") if image else None
         description_content = description.get("content") if description else None
 
-        # Download image if available
+        # Download image if available, with validation
         local_image_path = None
         if image_content:
             try:
-                # Resolve relative image URLs against the page URL
-                image_url = urllib.parse.urljoin(url, image_content)
-                image_response = requests.get(image_url, headers=headers, timeout=10)
-                image_response.raise_for_status()
+                image_url = urllib.parse.urljoin(response.url, image_content)
 
-                # Protect against very large images (limit ~2MB)
+                # Stream the image and enforce size limit
                 max_bytes = 2 * 1024 * 1024
-                content_length = image_response.headers.get('Content-Length')
-                if content_length and int(content_length) > max_bytes:
-                    raise requests.exceptions.RequestException("Image too large")
+                with session.get(image_url, headers=headers, timeout=10, stream=True) as img_resp:
+                    img_resp.raise_for_status()
 
-                # Create images folder if not exists
-                images_dir = os.path.join(os.getcwd(), 'static', 'images')
-                os.makedirs(images_dir, exist_ok=True)
-                # Generate unique filename
-                ext = os.path.splitext(urllib.parse.urlparse(image_url).path)[1] or '.jpg'
-                filename = f"{uuid.uuid4()}{ext}"
-                filepath = os.path.join(images_dir, filename)
+                    content_length = img_resp.headers.get('Content-Length')
+                    if content_length and int(content_length) > max_bytes:
+                        raise requests.exceptions.RequestException("Image too large")
 
-                content = image_response.content
-                if len(content) > max_bytes:
-                    raise requests.exceptions.RequestException("Image too large")
+                    images_dir = os.path.join(os.getcwd(), 'static', 'images')
+                    os.makedirs(images_dir, exist_ok=True)
 
-                with open(filepath, 'wb') as f:
-                    f.write(content)
+                    ext = os.path.splitext(urllib.parse.urlparse(image_url).path)[1] or '.jpg'
+                    allowed_exts = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+                    if ext.lower() not in allowed_exts:
+                        ext = '.jpg'
+                    filename = f"{uuid.uuid4()}{ext}"
+                    filepath = os.path.join(images_dir, filename)
 
-                local_image_path = f"/static/images/{filename}"
+                    total = 0
+                    with open(filepath, 'wb') as f:
+                        for chunk in img_resp.iter_content(8192):
+                            if not chunk:
+                                break
+                            total += len(chunk)
+                            if total > max_bytes:
+                                f.close()
+                                os.remove(filepath)
+                                raise requests.exceptions.RequestException("Image too large")
+                            f.write(chunk)
+
+                    local_image_path = f"/static/images/{filename}"
+
             except requests.exceptions.RequestException:
                 local_image_path = None
+                logging.exception("Failed to fetch or save remote image")
 
         return {
             "title": title_content,
             "image": local_image_path,
             "description": description_content
         }
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
+        # Do not expose internal error details to callers; return empty data
         return {
             "title": None,
             "image": None,
-            "description": None,
-            "error": str(e)
+            "description": None
         }
+    
+
+def validate_city(location_input):
+    q = urllib.parse.quote_plus(location_input or "")
+    url = f"https://nominatim.openstreetmap.org/search?q={q}&format=json&addressdetails=1&limit=1"
+    headers = {'User-Agent': 'BountyGo_Global_Validator'}
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data:
+            address = data[0].get('address', {})
+
+            city = address.get('city') or address.get('town') or address.get('village') or address.get('state')
+            country = address.get('country')
+            if city and country:
+                return True, f"{city}, {country}"
+            return False, None
+        return False, None
+    except requests.exceptions.RequestException:
+        return False, None
+    
+
+def calculate_success_rate(completed, total):
+    if not total or total <= 0:
+        return 100.0
+    return round((completed / total * 100), 1)
+
+
+def to_cents(amount_str: str) -> int:
+    try:
+        amount = Decimal(amount_str)
+        return int((amount * Decimal('100')).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+    except (ValueError, TypeError, decimal.InvalidOperation):
+        raise ValueError("Invalid currency format.")
+    
+
+def format_currency(cents: int) -> str:
+    return f"{cents / 100:.2f}"
+

@@ -23,6 +23,12 @@ pip install -r requirement.txt
 $env:SECRET_KEY = 'a_strong_secret_here'
 ```
 
+Optional (for testing):
+
+```powershell
+$env:FLASK_ENV = 'development'
+```
+
 4. Run the app:
 
 ```powershell
@@ -45,4 +51,15 @@ The app will be available at `http://localhost:5000`.
 - Set a strong `SECRET_KEY` in production. Do not commit secrets.
 - Consider using an external DB (Postgres) for production, and configure migrations.
 - CI workflow was intentionally removed from the branch push; add workflow via GitHub UI or push with a PAT that has `workflow` scope if you want the CI file in the repo.
+
+CI and required envs
+- The repository includes a GitHub Actions workflow that will run tests and fail the build if `SECRET_KEY` is not set.
+- For local CI testing, ensure `SECRET_KEY` is exported before running the test suite.
+
+Example (PowerShell):
+
+```powershell
+$env:SECRET_KEY = 'test-secret-for-ci'
+python -m pytest -q
+```
 

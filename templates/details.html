@@ -44,11 +44,11 @@
                     <div class="d-flex align-items-center mb-4">
                         <div class="me-4">
                             <small class="text-muted d-block">Item Price</small>
-                            <span class="fs-4 fw-bold text-dark">${{ bounty.price }}</span>
+                            <span class="fs-4 fw-bold text-dark">${{ bounty.price | currency }}</span>
                         </div>
                         <div class="border-start ps-4">
                             <small class="text-muted d-block">Traveler Reward</small>
-                            <span class="fs-2 fw-bold text-danger">${{ bounty.reward_fee }}</span>
+                            <span class="fs-2 fw-bold text-danger">${{ bounty.reward_fee | currency }}</span>
                         </div>
                     </div>
 
@@ -69,23 +69,95 @@
                     </div>
 
                     <div class="sticky-bottom-mobile">
-                        {% if bounty.poster_id != session.get('user_id') and bounty.status == 'pending' %}
-                            <form action="/claim" method="post">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="bounty_id" value="{{ bounty.id }}">
-                                <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow">
-                                    <i class="bi bi-check-circle me-2"></i>Claim this Bounty
-                                </button>
-                            </form>
-                        {% elif bounty.status == 'claimed' %}
-                            <div class="alert alert-warning text-center fw-bold rounded-3">
-                                This bounty has been claimed.
-                            </div>
-                        {% else %}
-                            <div class="alert alert-info text-center rounded-3">
-                                You posted this bounty. You can manage it in your profile.
-                            </div>
+                        {% if bounty.poster_id != session.get('user_id') %}
+                            {% if bounty.status == 'pending' %}
+                                {% if has_requested %}
+                                    <button class="btn btn-secondary w-100 rounded-pill" disabled>
+                                        <i class="bi bi-hourglass-split me-2"></i>Waiting for Approval...
+                                    </button>
+                                {% else %}
+                                    <form action="/request_bounty" method="post">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="bounty_id" value="{{ bounty.id }}">
+                                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+                                            Send Request to Carry
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            {% elif bounty.status == 'claimed' %}
+                                <div class="alert {{ 'alert-success' if bounty.traveler_id == session['user_id'] else 'alert-warning' }} text-center rounded-4 shadow-sm">
+                                    {% if bounty.traveler_id == session["user_id"] %}
+                                        <h5 class="mb-0">🎉 <b>You are the chosen Traveler!</b></h5>
+                                        <p class="small mb-0 mt-2">Please contact the shopper to proceed.</p>
+                                    {% else %}
+                                        <h5 class="mb-0">🔒 <b>Bounty Claimed</b></h5>
+                                        <p class="small mb-0 mt-2">This bounty is being handled by another traveler.</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
                         {% endif %}
+
+                        {% if session["user_id"] == bounty.poster_id %}
+                            {% if bounty.status == 'pending' %}
+                                <div class="mt-5">
+                                    <h5 class="fw-bold mb-3">Applicants ({{ requests|length }})</h5>
+                                    <div class="list-group shadow-sm">
+                                        {% for req in requests %}
+                                            <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle-sm me-3">{{ req.username[0] | upper }}</div>
+                                                    <div>
+                                                        <a href="/user/{{ req.traveler_id }}" class="fw-bold text-decoration-none">@{{ req.username }}</a>
+                                                        <div class="small">
+                                                            <span class="text-success fw-bold">{{ req.rate }}% Success</span> 
+                                                            <span class="text-muted">({{ req.completed_orders }} orders)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <form action="/accept_traveler" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="request_id" value="{{ req.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Accept</button>
+                                                </form>
+                                            </div>
+                                        {% endfor %}
+                                        {% if not requests %}
+                                            <p class="text-muted p-3">No requests yet.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% elif bounty.status == 'claimed' %}
+                                <form action="/completed_bounty" method="post">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="bounty_id" value="{{ bounty.id }}">
+                                    <button type="button" class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow btn-done-trigger" 
+                                            data-bs-toggle="modal" data-bs-target="#doneModal">
+                                        <i class="bi bi-check-circle-fill me-2"></i>Confirm Completed
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="doneModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold">Confirm Complete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-muted">
+                        Are you sure you want to complete this bounty? This action cannot be undone.
+                    </div>
+                    <div class="modal-body text-muted">
+                        Please ensure you have received the item before marking it as completed.
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmdoneBtn" class="btn btn-danger rounded-pill px-4">Complete Now</button>
                     </div>
                 </div>
             </div>
