@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
     initAlertAutoClose();
     initDeleteConfirmation();
     initDoneConfirmation();
+    loadOrderForm();
 });
 
 function initImagePreview() {
@@ -21,10 +22,10 @@ function initImagePreview() {
 }
 
 function initValidation() {
-    const form = document.querySelector('form[action="/order"], form[action^="/edit_bounty"]');
-    if (!form) return;
-
     document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (!form.action.includes('/order') && !form.action.includes('/edit_bounty')) return;
+
         const priceInput = form.querySelector('input[name="price"]');
         const rewardInput = form.querySelector('input[name="reward"]');
 
@@ -34,10 +35,11 @@ function initValidation() {
             
             if (price < 0 || reward < 0) {
                 e.preventDefault();
+                e.stopImmediatePropagation();
                 alert("Price and reward must be non-negative numbers.");
             }
         }
-    });
+    }, { capture: true });
 }
 
 function initAutoFill() {
@@ -152,4 +154,23 @@ function initAlertAutoClose() {
             bsAlert.close();
         }, 3000);
     });
+}
+
+
+function loadOrderForm() {
+    const orderForm = document.getElementById('order-form');
+    const orderButton = document.getElementById('order-button');
+
+    if (orderForm && orderButton) {
+        orderForm.addEventListener('submit', function(event) {
+            if (orderButton.disabled || event.defaultPrevented) return;
+
+            orderButton.disabled = true;
+            orderButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
+
+            setTimeout(() => {
+                orderButton.disabled = true;
+            }, 0);
+        });
+    }
 }

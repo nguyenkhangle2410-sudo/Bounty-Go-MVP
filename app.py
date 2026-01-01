@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 import urllib.parse
 import socket
 import ipaddress
+from datetime import datetime, timedelta, timezone
 
 from helpers import apology, login_required, get_product_info, validate_city, calculate_success_rate, to_cents, format_currency
 
@@ -195,6 +196,10 @@ def register():
 @login_required
 def order():
     if request.method == "POST":
+        if session.get('is_processing_order'):
+            return apology("Your request is being processed. Please wait.", 429)
+        
+        user_id = session.get("user_id")
 
         item_name = request.form.get("item_name")
         category = request.form.get("category")
@@ -203,29 +208,48 @@ def order():
         description = request.form.get("description")
         img_url = request.form.get("img_url")
         dispatch_box = request.form.get("dispatch_box") or request.form.get("location")
-
-        is_real, full_name = validate_city(dispatch_box)
-
-        if not item_name or not price or not reward or not description or not dispatch_box:
+        if not all([item_name, price, reward, description, dispatch_box]):
             return apology("All fields are required", 400)
         
+        is_real, full_name = validate_city(dispatch_box)
         if not is_real:
             return apology("The city does not exist. Please check again!", 400)
         
         try:
             price_cents = to_cents(price)
             reward_cents = to_cents(reward)
-
             if price_cents < 0 or reward_cents < 0:
                 return apology("Price and reward must be positive", 400)
-            
         except ValueError:
             return apology("Price and reward must be numbers", 400)
+        
+        last_order = db.execute("SELECT created_at FROM bounties WHERE poster_id = ? ORDER BY created_at DESC LIMIT 1", user_id)
+        if last_order:
+            try:
+                last_time = datetime.strptime(last_order[0]['created_at'], '%Y-%m-%d %H:%M:%S')
 
-        db.execute("INSERT INTO bounties (poster_id, item_name, category, price, reward_fee, description, img_url, dispatch_box) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-                 session["user_id"], item_name, category, price_cents, reward_cents, description, img_url, full_name)
-        flash("Bounty successfully posted!")
-        return redirect("/")
+                now = datetime.now()
+                diff = (now - last_time).total_seconds()
+
+                if 0 <= diff < 15:
+                    return apology(f"Please wait {int(15 - diff)}s...", 400)
+            except (ValueError, TypeError):
+                pass
+        
+        session['is_processing_order'] = True
+        try:
+            db.execute("BEGIN TRANSACTION")
+            db.execute("INSERT INTO bounties (poster_id, item_name, category, price, reward_fee, description, img_url, dispatch_box) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                    session["user_id"], item_name, category, price_cents, reward_cents, description, img_url, full_name)
+            db.execute("COMMIT")
+            flash("Bounty successfully posted!")
+            return redirect("/")
+        except Exception as e:
+            db.execute("ROLLBACK")
+            return apology("An error occurred during save.", 500)
+        finally:
+            session.pop('is_processing_order', None)
+
     else:
         return render_template("order.html")
     
