@@ -41,9 +41,9 @@ class SafeHTTPSConnection(SSRFSafeConnectionMixin, HTTPSConnection): pass
 
 class SafeHTTPAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
-        pool_kwargs.pop('connection_class', None)
+        pool_kwargs["connection_class"] = SafeHTTPConnection
 
-        super().init_poolmanager(connections, maxsize, block=block, **pool_kwargs)
+        return super().init_poolmanager(connections, maxsize, block=block, **pool_kwargs)
 
     def proxy_manager_for(self, *args, **kwargs):
         # Proxy
