@@ -91,21 +91,23 @@ def get_product_info(url):
         )
 
         # Extract content
-        title_content = title.get("content") if title and title.get("content") else (title.text if title else None)
-        description_content = description.get("content") if description else None
+        title_content = title.get("content").strip() if title and title.get("content") else (title.text if title else None)
+        description_content = description.get("content").strip() if description else None
 
         image_url = None
         if image_tag:
             raw_url = image_tag.get("content") or image_tag.get("href") or image_tag.get("src")
             if raw_url:
+                if raw_url.startswith("//"):
+                    raw_url = "https:" + raw_url
                 image_url = urllib.parse.urljoin(response.url, raw_url)
-
 
         return {
             "title": title_content,
             "image": image_url,
             "description": description_content
         }
+    
     except requests.exceptions.RequestException:
         # Do not expose internal error details to callers; return empty data
         return {
