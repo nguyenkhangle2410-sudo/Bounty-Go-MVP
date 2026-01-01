@@ -116,7 +116,7 @@ def index():
 
 
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("5 per minute")
+@limiter.limit("10 per minute")
 def login():
 
     session.clear()
@@ -547,4 +547,5 @@ def view_public_profile(user_id):
 
 
 
-
+if __name__ == "__main__":
+    app.run(debug=True)

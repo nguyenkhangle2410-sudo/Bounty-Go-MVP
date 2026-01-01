@@ -1,167 +1,166 @@
-CREATE TABLE users (
-    	id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    username TEXT NOT NULL UNIQUE,
-
-    email TEXT NOT NULL UNIQUE,
-
-    password_hash TEXT NOT NULL,
-
-    total_posted INTEGER DEFAULT 0,
-
-    completed_posted INTEGER DEFAULT 0,
-
-    total_claimed INTEGER DEFAULT 0,
-
-    completed_orders INTEGER DEFAULT 0
-
-);
-
-CREATE TABLE bounties (
-
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    poster_id INTEGER NOT NULL,
-
-    traveler_id INTEGER,
-
-    item_name TEXT NOT NULL,
-
-    category TEXT NOT NULL,
-
-    price REAL NOT NULL,
-
-    reward_fee REAL NOT NULL,
-
-    description TEXT NOT NULL,
-
-	
-
-    img_url TEXT NOT NULL DEFAULT '/static/Bountygo.png',
-
-	
-
-    dispatch_box TEXT NOT NULL,
-
-	
-
-    status TEXT NOT NULL DEFAULT 'pending',
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-	
-
-    FOREIGN KEY (poster_id) REFERENCES users(id),
-
-    FOREIGN KEY (traveler_id) REFERENCES users(id)
-
-);
-
-CREATE TABLE bounty_requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    bounty_id INTEGER NOT NULL,
-
-    traveler_id INTEGER NOT NULL,
-
-    status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'rejected'
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    
-    FOREIGN KEY (bounty_id) REFERENCES bounties(id),
-    FOREIGN KEY (traveler_id) REFERENCES users(id)
-); 
-
-
-CREATE TRIGGER increment_total_posted
-
-AFTER INSERT ON bounties
-
-BEGIN
-
-    UPDATE users 
-
-    SET total_posted = total_posted + 1 
-
-    WHERE id = NEW.poster_id;
-
-END;
-
-
-
-CREATE TRIGGER decrement_total_posted
-
-AFTER DELETE ON bounties
-
-BEGIN
-
-    UPDATE users 
-
-    SET total_posted = total_posted - 1 
-
-    WHERE id = OLD.poster_id;
-
-END;
-
-
-
-CREATE TRIGGER increment_completed_posted
-
-AFTER UPDATE OF status ON bounties
-
-FOR EACH ROW
-
-WHEN NEW.status = 'completed' AND OLD.status != 'completed'
-
-BEGIN
-
-    UPDATE users 
-
-    SET completed_posted = completed_posted + 1 
-
-    WHERE id = NEW.poster_id;
-
-END;
-
-
-
-CREATE TRIGGER increment_total_claimed
-
-AFTER UPDATE OF traveler_id ON bounties
-
-FOR EACH ROW
-
-WHEN NEW.traveler_id IS NOT NULL AND OLD.traveler_id IS NULL
-
-BEGIN
-
-    UPDATE users 
-
-    SET total_claimed = total_claimed + 1 
-
-    WHERE id = NEW.traveler_id;
-
-END;
-
-
-
-CREATE TRIGGER update_user_reputation
-
-AFTER UPDATE OF status ON bounties
-
-FOR EACH ROW
-
-WHEN NEW.status = 'completed' AND OLD.status != 'completed'
-
-BEGIN
-
-    UPDATE users 
-
-    SET completed_orders = completed_orders + 1 
-
-    WHERE id = NEW.traveler_id;
-
-END;
-
-
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="bounty.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="3170"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="bounties" custom_title="0" dock_id="1" table="4,8:mainbounties"/><dock_state state="000000ff00000000fd00000001000000020000000000000000fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000011e00ffffff000000000000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1*">CREATE TABLE users (
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    username TEXT NOT NULL UNIQUE,
+
+    email TEXT NOT NULL UNIQUE,
+
+    password_hash TEXT NOT NULL,
+
+    total_posted INTEGER DEFAULT 0,
+
+    completed_posted INTEGER DEFAULT 0,
+
+    total_claimed INTEGER DEFAULT 0,
+
+    completed_orders INTEGER DEFAULT 0
+
+);
+
+CREATE TABLE bounties (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    poster_id INTEGER NOT NULL,
+
+    traveler_id INTEGER,
+
+    item_name TEXT NOT NULL,
+
+    category TEXT NOT NULL,
+
+    price REAL NOT NULL,
+
+    reward_fee REAL NOT NULL,
+
+    description TEXT NOT NULL,
+
+	
+
+    img_url TEXT NOT NULL DEFAULT '/static/Bountygo.png',
+
+	
+
+    dispatch_box TEXT NOT NULL,
+
+	
+
+    status TEXT NOT NULL DEFAULT 'pending',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+	
+
+    FOREIGN KEY (poster_id) REFERENCES users(id),
+
+    FOREIGN KEY (traveler_id) REFERENCES users(id)
+
+);
+
+CREATE TABLE bounty_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    bounty_id INTEGER NOT NULL,
+
+    traveler_id INTEGER NOT NULL,
+
+    status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'rejected'
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    
+    FOREIGN KEY (bounty_id) REFERENCES bounties(id),
+    FOREIGN KEY (traveler_id) REFERENCES users(id)
+); 
+
+
+CREATE TRIGGER increment_total_posted
+
+AFTER INSERT ON bounties
+
+BEGIN
+
+    UPDATE users 
+
+    SET total_posted = total_posted + 1 
+
+    WHERE id = NEW.poster_id;
+
+END;
+
+
+
+CREATE TRIGGER decrement_total_posted
+
+AFTER DELETE ON bounties
+
+BEGIN
+
+    UPDATE users 
+
+    SET total_posted = total_posted - 1 
+
+    WHERE id = OLD.poster_id;
+
+END;
+
+
+
+CREATE TRIGGER increment_completed_posted
+
+AFTER UPDATE OF status ON bounties
+
+FOR EACH ROW
+
+WHEN NEW.status = 'completed' AND OLD.status != 'completed'
+
+BEGIN
+
+    UPDATE users 
+
+    SET completed_posted = completed_posted + 1 
+
+    WHERE id = NEW.poster_id;
+
+END;
+
+
+
+CREATE TRIGGER increment_total_claimed
+
+AFTER UPDATE OF traveler_id ON bounties
+
+FOR EACH ROW
+
+WHEN NEW.traveler_id IS NOT NULL AND OLD.traveler_id IS NULL
+
+BEGIN
+
+    UPDATE users 
+
+    SET total_claimed = total_claimed + 1 
+
+    WHERE id = NEW.traveler_id;
+
+END;
+
+
+
+CREATE TRIGGER update_user_reputation
+
+AFTER UPDATE OF status ON bounties
+
+FOR EACH ROW
+
+WHEN NEW.status = 'completed' AND OLD.status != 'completed'
+
+BEGIN
+
+    UPDATE users 
+
+    SET completed_orders = completed_orders + 1 
+
+    WHERE id = NEW.traveler_id;
+
+END;
+</sql><current_tab id="0"/></tab_sql></sqlb_project>

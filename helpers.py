@@ -52,16 +52,43 @@ def get_product_info(url):
     session.mount("https://", adapter)
     
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0',
+        }
         response = session.get(url, timeout=5, allow_redirects=True)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Try Open Graph tags first
-        title = soup.find("meta", property="og:title") or soup.find("meta", attrs={"name": "title"}) or soup.find("title")
-        image = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "image"})
-        description = soup.find("meta", property="og:description") or soup.find("meta", attrs={"name": "description"})
+        title = (
+            soup.find("meta", property="og:title") or 
+            soup.find("meta", attrs={"name": "title"}) or 
+            soup.find("title")
+        )
+        
+        image = (
+            soup.find("meta", property="og:image") or 
+            soup.find("meta", attrs={"name": "image"}) or
+            soup.find("link", rel="image_src") or
+            soup.find("img", {"id": "icImg"}) or
+            soup.find("img", {"class": "ux-image-magnifier-view__image"})
+        )
+
+        description = (
+            soup.find("meta", property="og:description") or 
+            soup.find("meta", attrs={"name": "description"})
+        )
 
         # Extract content
         title_content = title.get("content") if title and title.get("content") else (title.text if title else None)
