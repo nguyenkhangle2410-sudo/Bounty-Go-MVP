@@ -77,7 +77,7 @@ def get_product_info(url):
             soup.find("title")
         )
         
-        image = (
+        image_tag = (
             soup.find("meta", property="og:image") or 
             soup.find("meta", attrs={"name": "image"}) or
             soup.find("link", rel="image_src") or
@@ -92,55 +92,18 @@ def get_product_info(url):
 
         # Extract content
         title_content = title.get("content") if title and title.get("content") else (title.text if title else None)
-        image_content = image.get("content") if image else None
         description_content = description.get("content") if description else None
 
-        # Download image if available, with validation
-        local_image_path = None
-        if image_content:
-            try:
-                image_url = urllib.parse.urljoin(response.url, image_content)
+        image_url = None
+        if image_tag:
+            raw_url = image_tag.get("content") or image_tag.get("href") or image_tag.get("src")
+            if raw_url:
+                image_url = urllib.parse.urljoin(response.url, raw_url)
 
-                # Stream the image and enforce size limit
-                max_bytes = 2 * 1024 * 1024
-                with session.get(image_url, headers=headers, timeout=10, stream=True) as img_resp:
-                    img_resp.raise_for_status()
-
-                    content_length = img_resp.headers.get('Content-Length')
-                    if content_length and int(content_length) > max_bytes:
-                        raise requests.exceptions.RequestException("Image too large")
-
-                    images_dir = os.path.join(os.getcwd(), 'static', 'images')
-                    os.makedirs(images_dir, exist_ok=True)
-
-                    ext = os.path.splitext(urllib.parse.urlparse(image_url).path)[1] or '.jpg'
-                    allowed_exts = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
-                    if ext.lower() not in allowed_exts:
-                        ext = '.jpg'
-                    filename = f"{uuid.uuid4()}{ext}"
-                    filepath = os.path.join(images_dir, filename)
-
-                    total = 0
-                    with open(filepath, 'wb') as f:
-                        for chunk in img_resp.iter_content(8192):
-                            if not chunk:
-                                break
-                            total += len(chunk)
-                            if total > max_bytes:
-                                f.close()
-                                os.remove(filepath)
-                                raise requests.exceptions.RequestException("Image too large")
-                            f.write(chunk)
-
-                    local_image_path = f"/static/images/{filename}"
-
-            except requests.exceptions.RequestException:
-                local_image_path = None
-                logging.exception("Failed to fetch or save remote image")
 
         return {
             "title": title_content,
-            "image": local_image_path,
+            "image": image_url,
             "description": description_content
         }
     except requests.exceptions.RequestException:
