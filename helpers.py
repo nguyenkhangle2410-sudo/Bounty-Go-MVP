@@ -45,7 +45,7 @@ def apology(message, code=400):
 
 def get_product_info(url):
 
-    session = requests.session()
+    session = requests.Session()
 
     adapter = SafeHTTPAdapter()
     session.mount("http://", adapter)
