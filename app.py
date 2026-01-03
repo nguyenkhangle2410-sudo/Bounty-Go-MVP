@@ -123,8 +123,8 @@ def login():
     session.clear()
 
     if request.method == "POST":
-        username = request.form.get("username").lower()
-        email_val = request.form.get("email").lower()
+        username = request.form.get("username").lower().strip()
+        email_val = request.form.get("email").lower().strip()
         password = request.form.get("password")
 
         if not username or not password or not email_val:
@@ -157,7 +157,7 @@ def register():
     session.clear() # Clear any existing session data
 
     if request.method == "POST":
-        name = request.form.get("username").lower()
+        name = request.form.get("username").lower().strip()
         if not name:
             return apology("Missing Name.", 400)
 
@@ -165,7 +165,7 @@ def register():
         if not password:
             return apology("Missing Password.", 400)
         
-        email_val = request.form.get("email").lower()
+        email_val = request.form.get("email").lower().strip()
         if not email_val:
             return apology("Please enter your email address.", 400)
 

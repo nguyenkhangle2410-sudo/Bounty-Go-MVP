@@ -71,12 +71,17 @@ def get_product_info(url):
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Try Open Graph tags first
-        title = (
+        title_tag = (
             soup.find("meta", property="og:title") or 
             soup.find("meta", attrs={"name": "title"}) or 
             soup.find("title")
         )
-        
+
+        desc_tag = (
+            soup.find("meta", property="og:description") or 
+            soup.find("meta", attrs={"name": "description"})
+        )
+
         image_tag = (
             soup.find("meta", property="og:image") or 
             soup.find("meta", attrs={"name": "image"}) or
@@ -85,19 +90,21 @@ def get_product_info(url):
             soup.find("img", {"class": "ux-image-magnifier-view__image"})
         )
 
-        description = (
-            soup.find("meta", property="og:description") or 
-            soup.find("meta", attrs={"name": "description"})
-        )
-
         # Extract content
-        title_content = title.get("content").strip() if title and title.get("content") else (title.text if title else None)
-        description_content = description.get("content").strip() if description else None
+        title_content = None
+        if title_tag:
+            raw_title = title_tag.get("content") or title_tag.get_text()
+            title_content = raw_title.strip() if raw_title else None
+
+        if desc_tag:
+            raw_desc = desc_tag.get("content")
+            description_content = raw_desc.strip() if raw_desc else None
 
         image_url = None
         if image_tag:
             raw_url = image_tag.get("content") or image_tag.get("href") or image_tag.get("src")
             if raw_url:
+                raw_url = raw_url.strip()
                 if raw_url.startswith("//"):
                     raw_url = "https:" + raw_url
                 image_url = urllib.parse.urljoin(response.url, raw_url)
@@ -138,7 +145,7 @@ def validate_city(location_input):
                 address.get('province') or 
                 address.get('state')
             )
-            
+
             country = address.get('country')
             if city and country:
                 return True, f"{city}, {country}"
