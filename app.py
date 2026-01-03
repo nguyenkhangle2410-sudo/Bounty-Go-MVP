@@ -320,7 +320,7 @@ def bounties():
     
 
 @app.route("/bounties/<int:bounty_id>")
-@limiter.limit("10 per second")
+@limiter.limit("5 per second")
 @login_required
 def bounty(bounty_id):
     bounty = db.execute("""SELECT bounties.*, users.username AS poster_name, users.id AS poster_id
