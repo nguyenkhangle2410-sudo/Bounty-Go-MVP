@@ -103,7 +103,7 @@ def after_request(response):
 
 
 @app.route("/")
-@limiter.limit("10 per minute")
+@limiter.limit("10 per second")
 def index():
     # Home page route
     try:
@@ -151,7 +151,7 @@ def logout():
 
 
 @app.route("/register", methods=["GET", "POST"])
-@limiter.limit("5 per hour")
+@limiter.limit("10 per hour")
 def register():
     
     session.clear() # Clear any existing session data
@@ -255,7 +255,7 @@ def order():
     
 
 @app.route("/fetch_url")
-@limiter.limit("30 per hour")
+@limiter.limit("10 per minute")
 def fetch_url():
     url = request.args.get("url")
     # Basic validation: require scheme and prevent SSRF to private IPs
@@ -281,7 +281,7 @@ def fetch_url():
 
 
 @app.route("/bounties", methods=["GET", "POST"])
-@limiter.limit("10 per minute")
+@limiter.limit("10 per second")
 def bounties():
     query = "SELECT * FROM bounties WHERE status = 'pending'"
     params = []
@@ -320,7 +320,7 @@ def bounties():
     
 
 @app.route("/bounties/<int:bounty_id>")
-@limiter.limit("10 per minute")
+@limiter.limit("10 per second")
 @login_required
 def bounty(bounty_id):
     bounty = db.execute("""SELECT bounties.*, users.username AS poster_name, users.id AS poster_id
@@ -358,7 +358,7 @@ def bounty(bounty_id):
 
 
 @app.route("/request_bounty", methods=["POST"])
-@limiter.limit("5 per hour")
+@limiter.limit("10 per hour")
 @login_required
 def request_bounty():
     bounty_id = request.form.get("bounty_id")
@@ -377,7 +377,7 @@ def request_bounty():
 
 
 @app.route("/accept_traveler", methods=["POST"])
-@limiter.limit("5 per hour")
+@limiter.limit("10 per hour")
 @login_required
 def accept_traveler():
     request_id = request.form.get("request_id")
@@ -542,6 +542,7 @@ def completed_bounty():
 
 
 @app.route("/user/<int:user_id>")
+@limiter.limit("5 per minute")
 @login_required
 def view_public_profile(user_id):
     rows = db.execute("""SELECT username, email, 

@@ -129,7 +129,16 @@ def validate_city(location_input):
         if data:
             address = data[0].get('address', {})
 
-            city = address.get('city') or address.get('town') or address.get('village') or address.get('state')
+            city = (
+                address.get('city') or 
+                address.get('town') or 
+                address.get('village') or 
+                address.get('city_district') or 
+                address.get('suburb') or 
+                address.get('province') or 
+                address.get('state')
+            )
+            
             country = address.get('country')
             if city and country:
                 return True, f"{city}, {country}"
