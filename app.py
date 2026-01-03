@@ -323,23 +323,29 @@ def bounties():
 @limiter.limit("5 per second")
 @login_required
 def bounty(bounty_id):
-    bounty = db.execute("""SELECT bounties.*, users.username AS poster_name, users.id AS poster_id
-        FROM bounties
-        JOIN users ON bounties.poster_id = users.id
-        WHERE bounties.id = ?
+    rows = db.execute("""
+        SELECT b.*, 
+                    strftime('%Y-%m-%d %H:%M:%S', b.created_at) as formatted_date,
+                    u.username AS poster_name, 
+                    u.id AS poster_id
+        FROM bounties b
+        JOIN users u ON b.poster_id = u.id
+        WHERE b.id = ?
     """, bounty_id)
     
-    if not bounty:
+    if not rows:
         return apology("Bounty not found", 404)
     
-    requests = db.execute("""
-        SELECT r.id, r.traveler_id, u.username, u.completed_orders, u.total_claimed
+    current_bounty = rows[0]
+    
+    bounty_requests = db.execute("""
+        SELECT r.id AS req_id, r.traveler_id, u.username, u.completed_orders, u.total_claimed
         FROM bounty_requests r 
         JOIN users u ON r.traveler_id = u.id 
-        WHERE bounty_id = ? AND r.status = 'pending'
+        WHERE r.bounty_id = ? AND r.status = 'pending'
     """, bounty_id)
 
-    for req in requests:
+    for req in bounty_requests:
         claimed = req["total_claimed"] or 0
         completed = req["completed_orders"] or 0
         req["rate"] = calculate_success_rate(completed, claimed)
@@ -352,8 +358,8 @@ def bounty(bounty_id):
     
     bounty = bounty[0]
     return render_template("details.html", 
-                           bounty=bounty, 
-                           requests=requests, 
+                           bounty=current_bounty, 
+                           requests=bounty_requests, 
                            has_requested=has_requested)
 
 
