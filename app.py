@@ -356,7 +356,6 @@ def bounty(bounty_id):
     
     has_requested = len(check) > 0
     
-    bounty = bounty[0]
     return render_template("details.html", 
                            bounty=current_bounty, 
                            requests=bounty_requests, 
