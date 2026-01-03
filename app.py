@@ -324,10 +324,10 @@ def bounties():
 @login_required
 def bounty(bounty_id):
     rows = db.execute("""
-        SELECT b.*, 
-                    strftime('%Y-%m-%d %H:%M:%S', b.created_at) as formatted_date,
-                    u.username AS poster_name, 
-                    u.id AS poster_id
+        SELECT b.*,
+               strftime('%Y-%m-%d %H:%M:%S', b.created_at) as formatted_date,
+               u.username AS poster_name, 
+               u.id AS poster_id
         FROM bounties b
         JOIN users u ON b.poster_id = u.id
         WHERE b.id = ?
