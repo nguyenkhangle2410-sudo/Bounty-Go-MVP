@@ -59,7 +59,7 @@
                         </div>
                         <div>
                             <i class="bi bi-clock me-2 text-primary"></i>
-                            <strong>Posted:</strong> {{ bounty.formatted_date | default("N/A") }}
+                            <strong>Posted:</strong> {{ bounty.created_at.strftime('%Y-%m-%d %H:%M:%S') if bounty.created_at else 'N/A' }}
                         </div>
                     </div>
 

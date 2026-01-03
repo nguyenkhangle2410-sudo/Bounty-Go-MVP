@@ -243,7 +243,6 @@ def order():
             flash("Bounty successfully posted!")
             return redirect("/")
         except Exception as e:
-            db.execute("ROLLBACK")
             return apology("An error occurred during save.", 500)
         finally:
             session.pop('is_processing_order', None)
@@ -281,56 +280,53 @@ def fetch_url():
 @app.route("/bounties", methods=["GET", "POST"])
 @limiter.limit("10 per second")
 def bounties():
-    base_query = """
-        SELECT *, strftime('%Y-%m-%d %H:%M:%S', created_at) as formatted_date 
-        FROM bounties WHERE status = 'pending'
-    """
+    base_query = "SELECT * FROM bounties WHERE status = 'pending'"
     params = []
     categories = db.execute("SELECT DISTINCT category FROM bounties")
     dispatch_boxes = db.execute("SELECT DISTINCT dispatch_box FROM bounties")
 
-    if request.method == "POST":
+    try:
+        if request.method == "POST":
+            
+            search_query = request.form.get("search_query")
+            category = request.form.get("category")
+            dispatch_box = request.form.get("dispatch_box")
+            
+            query = base_query
+            if search_query:
+                query += " AND item_name ILIKE ?"
+                params.append(f"%{search_query}%")
+
+            if category:
+                query += " AND category = ?"
+                params.append(category)
+
+            if dispatch_box:
+                query += " AND dispatch_box = ?"
+                params.append(dispatch_box)
+
+            query += " ORDER BY price DESC"
+            bounties = db.execute(query, *params)
+
+            if not bounties:
+                flash("No bounties found.")
+                return redirect("/bounties")
+            
+            return render_template("bounties.html", bounties=bounties, categories=categories, dispatch_boxes=dispatch_boxes)
         
-        search_query = request.form.get("search_query")
-        category = request.form.get("category")
-        dispatch_box = request.form.get("dispatch_box")
-        
-        query = base_query
-        if search_query:
-            query += " AND item_name LIKE ?"
-            params.append(f"%{search_query}%")
-
-        if category:
-            query += " AND category = ?"
-            params.append(category)
-
-        if dispatch_box:
-            query += " AND dispatch_box = ?"
-            params.append(dispatch_box)
-
-        query += " ORDER BY price DESC"
-        bounties = db.execute(query, *params)
-
-        if not bounties:
-            flash("No bounties found.")
-            return redirect("/bounties")
-        
-        return render_template("bounties.html", bounties=bounties, categories=categories, dispatch_boxes=dispatch_boxes)
-    
-    else:
-        bounties = db.execute(base_query + "ORDER BY price DESC")
-        return render_template("bounties.html", bounties=bounties, categories=categories, dispatch_boxes=dispatch_boxes)
+        else:
+            bounties = db.execute(base_query + "ORDER BY price DESC")
+            return render_template("bounties.html", bounties=bounties, categories=categories, dispatch_boxes=dispatch_boxes)
+    except Exception as e:
+        return apology("Database busy, please refresh.", 500)
     
 
 @app.route("/bounties/<int:bounty_id>")
 @limiter.limit("5 per second")
 @login_required
-def bounty(bounty_id):
+def bounty_details(bounty_id):
     rows = db.execute("""
-        SELECT b.*,
-               strftime('%Y-%m-%d %H:%M:%S', b.created_at) as formatted_date,
-               u.username AS poster_name, 
-               u.id AS poster_id
+        SELECT b.*, u.username AS poster_name, u.id AS poster_id
         FROM bounties b
         JOIN users u ON b.poster_id = u.id
         WHERE b.id = ?
