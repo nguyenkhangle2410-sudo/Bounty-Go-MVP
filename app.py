@@ -238,10 +238,8 @@ def order():
         
         session['is_processing_order'] = True
         try:
-            db.execute("BEGIN TRANSACTION")
             db.execute("INSERT INTO bounties (poster_id, item_name, category, price, reward_fee, description, img_url, dispatch_box) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
                     session["user_id"], item_name, category, price_cents, reward_cents, description, img_url, full_name)
-            db.execute("COMMIT")
             flash("Bounty successfully posted!")
             return redirect("/")
         except Exception as e:
@@ -283,7 +281,10 @@ def fetch_url():
 @app.route("/bounties", methods=["GET", "POST"])
 @limiter.limit("10 per second")
 def bounties():
-    query = "SELECT * FROM bounties WHERE status = 'pending'"
+    base_query = """
+        SELECT *, strftime('%Y-%m-%d %H:%M:%S', created_at) as formatted_date 
+        FROM bounties WHERE status = 'pending'
+    """
     params = []
     categories = db.execute("SELECT DISTINCT category FROM bounties")
     dispatch_boxes = db.execute("SELECT DISTINCT dispatch_box FROM bounties")
@@ -294,6 +295,7 @@ def bounties():
         category = request.form.get("category")
         dispatch_box = request.form.get("dispatch_box")
         
+        query = base_query
         if search_query:
             query += " AND item_name LIKE ?"
             params.append(f"%{search_query}%")
@@ -308,14 +310,15 @@ def bounties():
 
         query += " ORDER BY price DESC"
         bounties = db.execute(query, *params)
+
         if not bounties:
-            flash("No bounties found matching your search criteria.")
+            flash("No bounties found.")
             return redirect("/bounties")
         
         return render_template("bounties.html", bounties=bounties, categories=categories, dispatch_boxes=dispatch_boxes)
     
     else:
-        bounties = db.execute("SELECT * FROM bounties WHERE status = 'pending' ORDER BY price DESC")
+        bounties = db.execute(base_query + "ORDER BY price DESC")
         return render_template("bounties.html", bounties=bounties, categories=categories, dispatch_boxes=dispatch_boxes)
     
 
